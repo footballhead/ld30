@@ -1,0 +1,45 @@
+NYI: advanced menu screen
+NYI: connections across "pacific ocean" should wrap around the screen, not cut across it
+NYI: natural disasters
+NYI: news ticker
+NYI: country growth by destiny model
+NYI: monthly update dialog/monthly checkups
+NYI: hover color for nodes
+NYI: add connection points to countries
+NYI: add line segments to nodes
+NYI: add "node" to end of line segments
+NYI: line preview endpoint snap to node
+NYI: node-line graph
+NYI: destroy dead RisingText
+NYI: node and line selections
+NYI: add temp nodes to existing lines (costs money??)
+
+
+WBN: customizable map viewport
+WBN: map scrolling (think google maps)
+WBN: SVG map for better scaling
+WBN: Google maps-esque movement
+WBN: randomly generated maps
+WBN: forms of communication (radio, phone lines, etc)
+
+
+
+
+
+
+
+
+
+
+# LEGEND
+# WBN: Would be nice, e.g. wishlist
+# FIX: Bug that needs fixing
+# NYI: Not yet implemented; required feature
+# DBG: Feature implemented for debugging; remove or hide before release
+
+
+recalculate when:
+    start node upgrade
+    end node upgrade
+    adding edge
+    removing edges or nodes

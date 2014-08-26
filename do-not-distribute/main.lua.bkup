@@ -1,0 +1,99 @@
+-- -----------------------------------------------------------------------------
+--     GLOBALS
+-- -----------------------------------------------------------------------------
+
+
+-- the dimensions of the screen
+win_dim = { w = 0, h = 0 }
+
+-- object representing the on-screen map
+map = {
+    -- the map image to draw
+    img = nil,
+    -- where on the screen to draw it
+    quad = nil,
+    -- the x location on the screen to draw the top-left corner of the map
+    x = 0,
+    -- ditto for y
+    y = 0,
+}
+
+-- state information for when left mouse button is pressed
+lmb = {
+    -- whether the button is clicked
+    down = false,
+    -- the x of where mouse last was
+    x = 0,
+    -- the y of where mouse last was
+    y = 0,
+}
+
+
+function love.load()
+    love.window.setTitle( "LD30" )
+    win_dim.w = 1024
+    win_dim.h = 768
+    love.window.setMode( win_dim.w, win_dim.h, nil )
+
+    -- need to get them screen resolutionssss
+    win_dim.w, win_dim.h = love.graphics.getDimensions()
+
+    -- NYI: google map image is placeholder; make own map
+    map.img = love.graphics.newImage( "google-map.png" )
+    map.img:setWrap( 'repeat', 'repeat' )
+    map.quad = love.graphics.newQuad( 0, 0, win_dim.w, win_dim.h, map.img:getWidth(), map.img:getHeight() )
+end
+
+
+function love.update( dt )
+    if lmb.down then
+        -- get current mouse position, which will be different than stored
+        local mx, my = love.mouse.getPosition()
+
+        -- use to calculate mouse movement deltas
+        local dx = mx - lmb.x
+        local dy = my - lmb.y
+
+        -- apply these calculated offsets to the map position to "drag" the map
+        map.x = map.x + dx
+        map.y = map.y + dy
+
+
+
+        -- store current mouse position so this works next time around
+        lmb.x = mx
+        lmb.y = my
+    end
+
+    -- make sure the map stays in reasonable bounds
+    -- again, this is to make the map very google maps like
+    -- NYI: implement customizable map viewport
+    if map.y > 0 then
+        map.y = 0
+    end
+
+    if map.y + map.img:getHeight() < win_dim.h then
+        map.y = map.img:getHeight() * -1 + win_dim.h
+    end
+end
+
+
+function love.draw()
+    love.graphics.draw( map.img, map.quad, 0, 0, 0, 1, 1, map.x, map.y )
+end
+
+
+function love.mousepressed( x, y, button )
+    if button == 'l' then
+        lmb.down = true
+        lmb.x = x
+        lmb.y = y
+    end
+end
+
+
+function love.mousereleased( x, y, button )
+    if button == 'l' then
+        lmb.down = false
+    end
+end

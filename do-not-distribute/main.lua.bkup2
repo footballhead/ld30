@@ -1,0 +1,255 @@
+require "countries"
+require "menu"
+require "time"
+require "button"
+require "mainmenu"
+require "info"
+require "line"
+
+-- -----------------------------------------------------------------------------
+--     GLOBALS
+-- -----------------------------------------------------------------------------
+
+-- object representing the on-screen map (most loaded in love.load)
+map = {
+    -- the map image to draw
+    img = nil,
+    -- the mask image used for selecting different countries
+    mask = nil,
+    -- the data of the mask image
+    data = nil,
+    -- the x location on the screen to draw the top-left corner of the map
+    x = 0,
+    -- ditto for y
+    y = 0,
+}
+
+-- state information for when left mouse button is pressed
+lmb = {
+    -- whether the button is clicked
+    down = false,
+    -- true for one frame after lmb is released
+    click = false,
+    -- location of last click
+    clickx = 0,
+    clicky = 0,
+}
+
+-- state information for when right mouse button is pressed
+rmb = {
+    -- whether the button is clicked
+    down = false,
+    -- true for one frame after rmb is released
+    click = false,
+}
+
+-- object to store transfer $$ and currency makeup
+transfer = {
+    -- NYI!
+}
+
+-- line used to preview where networks are built
+preview_line = {
+    -- location of start (endpoint is at mouse)
+    -- if (-1,-1) then don't draw
+    x = -1,
+    y = -1,
+
+    is_active = function( self )
+        return not ( self.x == -1 and self.y == -1 )
+    end,
+
+    draw = function( self )
+        if not self:is_active() then return end
+
+        local mx, my = love.mouse.getPosition()
+        love.graphics.setColor( 255, 0, 0, 128 )
+        love.graphics.setLineWidth( 2 )
+        love.graphics.line( self.x, self.y, mx, my )
+    end
+}
+
+-- which screen we are on (e.g. menu, game, etc)
+-- valid screens so far are;
+--     mainmenu for title screen
+--     info for game info
+--     nil for actual game
+screen = mainmenu
+
+-- fonts used on gui (loaded in love.load)
+gui_font = nil
+gui_font_bold = nil
+
+function love.load()
+    -- set up window properties, store the necessary ones
+    love.window.setTitle( "LD30" )
+    love.window.setMode( 1024, 768, nil )
+
+    map.img = love.graphics.newImage( "Map-790.png" )
+
+    -- load mask and get pixel data
+    map.mask = love.graphics.newImage( "Map-790-mask.png" )
+    map.data = map.mask:getData()
+
+    -- load font used for gui
+    gui_font = love.graphics.newFont( "LiberationSans-Regular.ttf" )
+    gui_font_bold = love.graphics.newFont( "LiberationSans-Bold.ttf" )
+
+    -- load gui buttons
+    local winw, winh = love.graphics.getDimensions()
+    Button:new( winw - 96, winh - 64 , "pause.png", "pause-press.png", function() time.factor = 0 end )
+    local tmp = Button:new( winw - 64, winh - 64 , "play.png", "play-press.png", function() time.factor = 1 end )
+    Button:new( winw - 32, winh - 64 , "fast-forward.png", "fast-forward-press.png", function() time.factor = 2 end )
+
+    -- HCK to get play button properly highlighted
+    tmp:click()
+
+    mainmenu:init()
+    info:init()
+end
+
+
+function love.update( dt )
+    if screen ~= nil then
+        screen:update( dt )
+        return
+    end
+
+    local mx, my = love.mouse.getPosition()
+
+    -- menu is updated before buttons to properly register input (menu appears overtop of buttons)
+    --if lmb.click then error( "lmb click" ) end
+    menu:update()
+
+    -- look for GUI button pushes next
+    for i, but in ipairs( Button.list ) do
+        but:update()
+    end
+
+    -- update all built communication lines
+    for i, line in ipairs( Line.instances ) do
+        line:update()
+    end
+
+    -- open action menu on rmb press or close the one that is already open
+    if rmb.click then
+        if menu.opened then
+            menu.opened = false
+        else
+            menu:open( mx, my )
+        end
+    end
+
+    -- on lmb click close the menu
+    if lmb.click then
+        if menu.opened then
+            menu.opened = false
+        else
+            if preview_line:is_active() then
+                Line:new( preview_line.x, preview_line.y, mx, my, 0.1 )
+                preview_line.x = -1
+                preview_line.y = -1
+            else
+                preview_line.x = lmb.clickx
+                preview_line.y = lmb.clicky
+            end
+            --DBG: error( "derp" )
+        end
+    end
+
+    -- always reset click status so only active for 1 frame
+    lmb.click = false
+    rmb.click = false
+
+    -- update internal clock to push things along
+    time:update( dt )
+end
+
+
+function love.draw()
+    if screen ~= nil then
+        screen:draw()
+        return
+    end
+
+    -- set the font used for drawing everything
+    love.graphics.setFont( gui_font )
+
+    -- draw map img
+    love.graphics.setColor( 255, 255, 255, 255 )
+    love.graphics.draw( map.img, map.x, map.y )
+
+    -- draw all communication lines
+    for i, line in ipairs( Line.instances ) do
+        line:draw()
+    end
+
+    -- draw the build preview line
+    preview_line:draw()
+
+    -- draw stats menu if hovering over country
+    local mx, my = love.mouse.getPosition()
+    local cntry = get_country( mx, my )
+
+    if cntry ~= "None" and ( not menu.opened ) and ( not preview_line:is_active() ) then
+        Country.all[cntry]:draw_stats( mx, my )
+    end
+
+    -- draw date in bottom corner of screen
+    local winw, winh = love.graphics.getDimensions()
+    love.graphics.setColor( 255, 255, 255, 255 )
+    love.graphics.setFont( gui_font_bold )
+    love.graphics.print( "DATE: " .. time:get_date(), winw - 192, winh - 32 )
+
+    -- draw the gui buttons
+    for i, but in ipairs( Button.list ) do
+        but:draw()
+    end
+
+    -- draw the menu over top of everything
+    menu:draw()
+end
+
+
+function love.mousepressed( x, y, button )
+    if screen ~= nil then
+        screen:mousepressed( x, y, button )
+    end
+
+    if button == 'l' then
+        lmb.down = true
+    elseif button == 'r' then
+        rmb.down = true
+    end
+end
+
+
+function love.mousereleased( x, y, button )
+    if button == 'l' then
+        lmb.down = false
+        lmb.click = true
+        lmb.clickx = x
+        lmb.clicky = y
+    elseif button == 'r' then
+        rmb.click = true
+        rmb.down = false
+    end
+end
+
+
+function love.keypressed(k)
+    if k == 'escape' then
+        love.event.push('quit') -- Quit the game.
+    end
+end
+
+
+-- Get the country at the (x, y) screen position based on the map mask
+function get_country( x, y )
+    -- using global map mask data get country color
+    local r, g, b, a = map.data:getPixel( x, y )
+    -- DBG: print color to console so we know what happened if we crash
+    print( tostring(r)..","..tostring(g)..","..tostring(b) )
+    -- use R, G, B of pixel along with table to translate
+    return country_table[r][g][b]
+end

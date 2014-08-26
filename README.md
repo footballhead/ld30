@@ -13,6 +13,11 @@ Controls
 
 Left and right mouse; explained in-game
 
+Binaries
+--------
+
+Binaries for Windows, Linux, and Mac can be found here: http://www.ludumdare.com/compo/ludum-dare-30/?action=preview&uid=16438
+
 Credits
 -------
 

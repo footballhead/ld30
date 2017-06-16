@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=ICCC
+Comment=International Communication Construction and Consulting
+Exec=iccc
+Icon=/usr/share/iccc/icon.png
+Terminal=false
+Type=Application
+Categories=Games;

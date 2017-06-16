@@ -1,0 +1,3 @@
+#!/bin/sh
+
+love /usr/share/iccc/iccc.love

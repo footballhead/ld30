@@ -1,0 +1,12 @@
+Package: iccc
+Version: 1.0.0
+Section: games
+Priority: optional
+Architecture: amd64
+Depends: love (= 0.9.1-3ubuntu1)
+Homepage: https://44d-again-again.itch.io/iccc
+Replaces: iccc (<= 1.0.0)
+Maintainer: Michael Hitchens <mdhitchens@gmail.com>
+Description: Work for the (I)nternational (C)ommunication (C)onstruction and (C)onsulting! 
+ Use communication to spread your political agenda by connecting the world with the internet and shoving your message down the pipe! Beware of your demanding company, bankruptcy, and easy to piss off locals! 
+
